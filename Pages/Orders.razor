@@ -1,0 +1,83 @@
+﻿@page "/orders"
+
+@inject EntSelService SelectService
+<h3>Orders</h3>
+@if (itms == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <EditForm Model="orders">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Id</th>
+                    <th>Doc</th>
+                    <th>Date</th>
+                    <th>Entity</th>
+                    <th>A</th>
+                    <th>Acct</th>
+                    <th>Item</th>
+                    <th>Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (Order o in orders)
+                {
+                <tr>
+                    <td style="width: 2em">@o.Id</td>
+                    <td style="width: 7em"><InputText class="form-control" @bind-Value="o.DocNum" /></td>
+                    <td style="width: 10em"><InputDate class="form-control" @bind-Value="o.Date" @bind-Value:format="MM yyyy dd" /></td>
+                    <td style="width: 16em">
+                        <IntInputSelect class="form-control" @bind-Value="o.EntId">
+                            <Virtualize Items="@ents" Context="item">
+                                <option value="@item.Id">@item.Name</option>
+                            </Virtualize>
+                        </IntInputSelect>
+                    </td>
+                    <td style="width: 2em">@o.AcctId</td>
+                    <td style="width: 20em">
+                        <IntInputSelect class="form-control" @bind-Value="o.AcctId">
+                            @foreach (var item in accts)
+                            {
+                                <option value="@item.Id">@item.Name</option>
+                            }
+                        </IntInputSelect>
+                    </td>
+                    <td style="width: 20em">
+                        <IntInputSelect class="form-control" @bind-Value="o.ItmId">
+                            <Virtualize Items="@itms" Context="item">
+                                <option value="@item.Id">@item.Name</option>
+                            </Virtualize>
+                        </IntInputSelect>
+                    </td>
+                    <td style="width: 8em"><InputNumber class="form-control" @bind-Value="o.Amount" @bind-Value:format="#,##0.00;(#,##0.00)" /></td>
+                </tr>
+                }
+            </tbody>
+        </table>
+        <p>@message</p>
+    </EditForm>
+}
+
+
+@code {
+    private List<EntSel> accts;
+    private List<EntSel> ents;
+    private List<EntSel> itms;
+    private List<Order> orders;
+    private string message;
+    protected override async Task OnInitializedAsync()
+    {
+        accts = await SelectService.GetAcctsAsync();
+        ents = await SelectService.GetEntsAsync();
+        itms = await SelectService.GetItmsAsync();
+        orders = SelectService.GetOrders();
+    }
+
+    void OnChange(Order order)
+    {
+        message = String.Format("Id {0}, DocNum {1}, EntId {2}, ItmId {3}", order.Id, order.DocNum, order.EntId, order.ItmId);
+    }
+}
