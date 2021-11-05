@@ -1,0 +1,82 @@
+﻿@page "/accts"
+@using System.Timers
+@inject EntSelService SelectService
+<h3>Accounts</h3>
+
+<input class="form-control" @bind="FilterStr" @bind:event="oninput" />
+
+@if (filteredAccts == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div style="height: 100%">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Id</th>
+                    <th>ValStrs</th>
+                    <th>Name</th>
+                    <th>Number</th>
+                </tr>
+            </thead>
+            <tbody>
+                <Virtualize Items="@filteredAccts" Context="ent">
+                    <tr>
+                        <td>@ent.Id</td>
+                        <td>@ent.ValStrs</td>
+                        <td>@ent.Name</td>
+                        <td>@ent.Number</td>
+                    </tr>
+                </Virtualize>
+            </tbody>
+        </table>
+    </div>
+
+}
+
+@code {
+    private Timer _debounceTimer;
+    private List<EntSel> accts;
+    private List<EntSel> filteredAccts;
+    private string filterStr;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _debounceTimer = new Timer();
+        _debounceTimer.Interval = 1700;
+        _debounceTimer.AutoReset = false;
+        _debounceTimer.Elapsed += Filter;
+        accts = await SelectService.GetAcctsAsync();
+        filteredAccts = accts;
+    }
+
+    private async void Filter(Object source, ElapsedEventArgs e)
+    {
+        if (filterStr.Length > 0)
+        {
+            filteredAccts = await Task.FromResult(accts.Where(a => a.ValStrs.Contains(filterStr)).ToList());
+        }
+        else
+            filteredAccts = accts;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private string FilterStr
+    {
+        get => filterStr;
+        set
+        {
+            if (value != filterStr)
+            {
+                filterStr = value;
+                _debounceTimer.Stop();
+                _debounceTimer.Start();
+            }
+
+        }
+    }
+
+
+}
