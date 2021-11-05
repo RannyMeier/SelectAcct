@@ -79,6 +79,10 @@ else
         else
             filteredEnts = ents;
         fec = filteredEnts.Count;
+        if (fec == 1)
+            selectedId = filteredEnts[0].Id;
+        else
+            selectedId = 0;
         await InvokeAsync(StateHasChanged);
     }
 
