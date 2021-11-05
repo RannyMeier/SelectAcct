@@ -2,11 +2,13 @@
 @using System.Timers
 @implements IDisposable
 @inject EntSelService SelectService
-<div class="row">
+<div class="d-flex">
     <h3>Items</h3><span class="pl-4">@fec</span>
 </div>
-<input class="form-control" @bind="FilterStr" @bind:event="oninput" />
-
+<div class="d-flex">
+    <div><span class="pr-4">@selectedId</span></div>
+    <div class="col-sm-10"><input class="form-control" @bind="FilterStr" @bind:event="oninput" @onfocus="onFilterFocus" /></div>
+</div>
 @if (filteredEnts == null)
 {
     <p><em>Loading...</em></p>
@@ -29,7 +31,7 @@ else
                         <td>@ent.Id</td>
                         <td>@ent.ValStrs</td>
                         <td>@ent.Name</td>
-                        <td>@ent.Number</td>
+                        <td><button type="button" class="btn btn-link" @onclick="@(e => SelectEnt(e, ent.Id))">@ent.Number</button></td>
                     </tr>
                 </Virtualize>
             </tbody>
@@ -39,11 +41,13 @@ else
 }
 
 @code {
+    private int selectedId;
     private Timer _debounceTimer;
     private List<EntSel> ents;
     private List<EntSel> filteredEnts;
     private string filterStr;
     private int fec;
+    private string filterPrompt = "Enter up to three filter terms...";
 
     protected override async Task OnInitializedAsync()
     {
@@ -54,6 +58,7 @@ else
         ents = await SelectService.GetItmsAsync();
         filteredEnts = ents;
         fec = filteredEnts.Count;
+        filterStr = filterPrompt;
     }
 
     private async void Filter(Object source, ElapsedEventArgs e)
@@ -90,6 +95,20 @@ else
             }
 
         }
+    }
+
+    private void onFilterFocus()
+    {
+        if (filterStr.Equals(filterPrompt))
+        {
+            filterStr = "";
+        }
+    }
+
+    private void SelectEnt(MouseEventArgs e, int entId)
+    {
+        selectedId = entId;
+        FilterStr = ents.Where(i => i.Id == entId).FirstOrDefault().Number;
     }
 
     void IDisposable.Dispose()
