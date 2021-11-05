@@ -62,7 +62,9 @@ namespace SelectAcct.Services
                 response.EnsureSuccessStatusCode();
                 string responseBody = await response.Content.ReadAsStringAsync();
                 var itms = JsonSerializer.Deserialize<EntList>(responseBody);
-                itmSelList = itms.Ents;
+                itmSelList = itms.Ents.Select(i => new EntSel { 
+                    Id = i.Id, ValStrs = String.Concat(i.ValStrs, " ", i.Number), Name = i.Name, Number = i.Number
+                    }).ToList();
             }
             return itmSelList;
         }

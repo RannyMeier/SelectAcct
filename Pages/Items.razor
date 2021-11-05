@@ -1,11 +1,12 @@
 ﻿@page "/items"
 @using System.Timers
 @inject EntSelService SelectService
-<h3>Items</h3>
-
+<div class="row">
+    <h3>Items</h3><span class="pl-4">@fic</span>
+</div>
 <input class="form-control" @bind="FilterStr" @bind:event="oninput" />
 
-@if (filteredAccts == null)
+@if (filteredEnts == null)
 {
     <p><em>Loading...</em></p>
 }
@@ -22,7 +23,7 @@ else
                 </tr>
             </thead>
             <tbody>
-                <Virtualize Items="@filteredAccts" Context="ent">
+                <Virtualize Items="@filteredEnts" Context="ent">
                     <tr>
                         <td>@ent.Id</td>
                         <td>@ent.ValStrs</td>
@@ -39,8 +40,9 @@ else
 @code {
     private Timer _debounceTimer;
     private List<EntSel> accts;
-    private List<EntSel> filteredAccts;
+    private List<EntSel> filteredEnts;
     private string filterStr;
+    private int fic;
 
     protected override async Task OnInitializedAsync()
     {
@@ -49,19 +51,28 @@ else
         _debounceTimer.AutoReset = false;
         _debounceTimer.Elapsed += Filter;
         accts = await SelectService.GetItmsAsync();
-        filteredAccts = accts;
+        filteredEnts = accts;
+        fic = filteredEnts.Count;
     }
 
     private async void Filter(Object source, ElapsedEventArgs e)
     {
         if (filterStr.Length > 0)
         {
-            string[] terms = String.Concat(filterStr, "  ").Split(" ");
-            filteredAccts = await Task.FromResult(accts.Where(a => 
-            a.ValStrs.Contains(terms[0]) && a.ValStrs.Contains(terms[1]) && a.ValStrs.Contains(terms[2])).ToList());
+            string[] terms = String.Concat(filterStr, "   ").Split(" ");
+            //filteredAccts = await Task.FromResult(accts.Where(a =>
+            //a.ValStrs.Contains(terms[0]) && a.ValStrs.Contains(terms[1]) && a.ValStrs.Contains(terms[2])).ToList());
+
+            filteredEnts = await Task.FromResult(accts.Where(a =>
+                a.ValStrs.IndexOf(terms[0], StringComparison.OrdinalIgnoreCase) != -1
+                && a.ValStrs.IndexOf(terms[1], StringComparison.OrdinalIgnoreCase) != -1
+                && a.ValStrs.IndexOf(terms[2], StringComparison.OrdinalIgnoreCase) != -1
+                && a.ValStrs.IndexOf(terms[3], StringComparison.OrdinalIgnoreCase) != -1
+                ).ToList());
         }
         else
-            filteredAccts = accts;
+            filteredEnts = accts;
+        fic = filteredEnts.Count;
         await InvokeAsync(StateHasChanged);
     }
 
